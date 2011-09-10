@@ -4,17 +4,18 @@
 int main()
 {
 	pipejump_client *client;
-	pipejump_entity *account, *deal;
+	pipejump_collection *collection;
+	int i;
 
 	client = pipejump_init("key");
-	account = pipejump_entity_init();
-	deal = pipejump_entity_init();
-	pipejump_get_account(client, account);
-	pipejump_get_deal(client, deal, 36298);
-	pipejump_entity_inspect(account);
-	pipejump_entity_inspect(deal);
-	pipejump_entity_free(account);
-	pipejump_entity_free(deal);
+	collection = pipejump_collection_init();
+	pipejump_get_deals(client, collection);
+	i = 0;
+	while (i < collection -> size)
+	{
+		pipejump_entity_inspect(collection -> values[i]);
+		i++;
+	}
 	pipejump_close(client);
 	return 0;
 }

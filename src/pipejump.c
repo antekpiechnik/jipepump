@@ -57,6 +57,16 @@ void pipejump_get_deal(pipejump_client *client, pipejump_entity *deal, long deal
 	pipejump_request(client, deal, path, PIPEJUMP_ENTITY);
 }
 
+void pipejump_get_deals(pipejump_client *client, pipejump_collection *deals)
+{
+	pipejump_request(client, deals, "deals", PIPEJUMP_COLLECTION);
+}
+
+void pipejump_get_users(pipejump_client *client, pipejump_collection *collection)
+{
+	pipejump_request(client, collection, "collection", PIPEJUMP_COLLECTION);
+}
+
 void get_single_object(json_t *json_entity, pipejump_entity *entity) {
 	const char *key;
 	const char *namespace;
@@ -75,15 +85,41 @@ void get_single_object(json_t *json_entity, pipejump_entity *entity) {
 		switch (json_typeof(value))
 		{
 			case JSON_STRING:
-				pipejump_entity_set(entity, key, (void *)json_string_value(value), PIPEJUMP_STRING);
+				pipejump_entity_set(entity, (char *)key, (void *)json_string_value(value), PIPEJUMP_STRING);
 				break;
 			case JSON_INTEGER:
-				pipejump_entity_set(entity, key, (void *)json_integer_value(value), PIPEJUMP_INTEGER);
+				pipejump_entity_set(entity, (char *)key, (void *)json_integer_value(value), PIPEJUMP_INTEGER);
+				break;
+			case JSON_NULL:
+				pipejump_entity_set(entity, (char *)key, NULL, PIPEJUMP_NULL);
+				break;
+			case JSON_TRUE:
+				pipejump_entity_set(entity, (char *)key, NULL, PIPEJUMP_TRUE);
+				break;
+			case JSON_FALSE:
+				pipejump_entity_set(entity, (char *)key, NULL, PIPEJUMP_FALSE);
+				break;
+			case JSON_OBJECT:
+			case JSON_ARRAY:
+			case JSON_REAL:
 				break;
 		}
 
 		iter = json_object_iter_next(json_entity, iter);
 	}
+}
+
+void get_multiple_objects(json_t *json_array, pipejump_collection *entities) {
+	int i, size;
+
+	size = json_array_size(json_array);
+
+	i = 0;
+	for (i = 0; i < size; i++)
+	{
+		get_single_object(json_array_get(json_array, i), entities -> values[i]);
+	}
+	entities -> size = i;
 }
 
 pipejump_entity *pipejump_entity_init()
@@ -130,7 +166,7 @@ void pipejump_entity_inspect(pipejump_entity *entity)
 	int current_key;
 	char *key;
 	void *value;
-	enum pipejump_entity_type type;
+	enum pipejump_value_type type;
 
 	current_key = 0;
 	printf("<%s", entity -> name);
@@ -148,10 +184,35 @@ void pipejump_entity_inspect(pipejump_entity *entity)
 			case PIPEJUMP_INTEGER:
 				printf("%s:%ld", key, (long)value);
 				break;
+			case PIPEJUMP_NULL:
+				printf("%s:null", key);
+				break;
+			case PIPEJUMP_TRUE:
+				printf("%s:true", key);
+				break;
+			case PIPEJUMP_FALSE:
+				printf("%s:false", key);
+				break;
 		}
 		current_key++;
 	}
 	printf(">\n");
+}
+
+pipejump_collection *pipejump_collection_init()
+{
+	pipejump_collection *collection;
+	int i;
+	
+	collection = malloc(sizeof(pipejump_collection));
+	collection -> values = malloc(sizeof(*(collection -> values)) * 300);
+	for (i = 0; i < 300; i++)
+	{
+		collection -> values[i] = pipejump_entity_init();
+	}
+	collection -> size = 0;
+
+	return collection;
 }
 
 void pipejump_request(pipejump_client *client, void *object, char *path, enum pipejump_entity_type type)
@@ -175,6 +236,7 @@ void pipejump_request(pipejump_client *client, void *object, char *path, enum pi
 			get_single_object(json_entity, (pipejump_entity *)object);
 			break;
 		case PIPEJUMP_COLLECTION:
+			get_multiple_objects(json_entity, (pipejump_collection *)object);
 			break;
 		default:
 			break;
