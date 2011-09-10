@@ -34,6 +34,28 @@ In order to get the PipeJump Account object, the following call is necessary:
   pipejump_get_account(client);
 ```
 
+### Deals
+
+Getting a single deal
+
+```c
+	pipejump_get_deal(client, pipejump_entity troll, long deal_id);
+```
+
+Getting a whole collection of users' deals
+
+```c
+	pipejump_get_deals(client, pipejump_entity troll);
+```
+
+### Users
+
+Getting collection of account contacts
+
+```c
+	pipejump_get_users(client, pipejump_collection trol);
+```
+
 Closing the connection
 ----------------------
 
