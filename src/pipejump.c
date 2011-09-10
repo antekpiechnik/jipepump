@@ -1,4 +1,16 @@
+#include <string.h>
 #include "pipejump.h"
+
+size_t fetch_curl_response(char *ptr, size_t size, size_t nmemb, void *userdata)
+{
+	char *output;
+
+	output = malloc(size * nmemb + 1);
+	memcpy(output, ptr, size * nmemb);
+	output[size * nmemb] = '\0';
+	fprintf(stdout, "%s", output);
+	return size * nmemb;
+}
 
 pipejump_client *pipejump_init(char *api_key)
 {
@@ -25,6 +37,7 @@ pipejump_client *pipejump_init(char *api_key)
 	headers = curl_slist_append(headers, auth_header);
 	headers = curl_slist_append(headers, "Accept: application/json");
 	curl_easy_setopt(curl_handle, CURLOPT_HTTPHEADER, headers);
+	curl_easy_setopt(curl_handle, CURLOPT_WRITEFUNCTION, fetch_curl_response);
 
 	client -> curl_handle = curl_handle;
 	return client;
@@ -39,8 +52,10 @@ void pipejump_close(pipejump_client *client)
 pipejump_account *pipejump_get_account(pipejump_client *client)
 {
 	CURLcode response;
+	long response_code;
 	
 	response = curl_easy_perform(client -> curl_handle);
-	printf("%d\n", response);
+	curl_easy_getinfo(client -> curl_handle, CURLINFO_RESPONSE_CODE, &response_code);
+	printf("%ld\n", response_code);
 	return NULL;
 }
