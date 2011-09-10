@@ -47,24 +47,85 @@ void pipejump_close(pipejump_client *client)
 
 pipejump_entity *pipejump_get_account(pipejump_client *client)
 {
-	return pipejump_request(client, "account", "account", PIPEJUMP_ENTITY);
+	return pipejump_request(client, "account", PIPEJUMP_ENTITY);
 }
 
-pipejump_entity get_single_object(json_t *json_entity) {
+pipejump_entity *get_single_object(json_t *json_entity) {
 	const char *key;
+	const char *namespace;
 	json_t *value;
-
-	void *iter = json_object_iter(json_entity);
-	while(iter)
+	void *iter;
+	pipejump_entity *entity;
+	
+	iter = json_object_iter(json_entity);
+	namespace = json_object_iter_key(iter);
+	json_entity = json_object_get(json_entity, namespace);
+	iter = json_object_iter(json_entity);
+	entity = pipejump_entity_init(namespace);
+	while (iter)
 	{
 		key = json_object_iter_key(iter);
 		value = json_object_iter_value(iter);
-		fprintf(stdout, "%15s => %s\n", key, json_string_value(value));
+		pipejump_entity_set(entity, key, json_string_value(value));
 		iter = json_object_iter_next(json_entity, iter);
+	}
+	return entity;
+}
+
+pipejump_entity *pipejump_entity_init(const char *name)
+{
+	pipejump_entity *entity;
+	char **keys;
+	char **values;
+	char *new_name;
+
+	new_name = malloc(sizeof(*name) * strlen(name));
+	strcpy(new_name, name);
+
+	keys = malloc(sizeof(*keys) * 100);
+	values = malloc(sizeof(*keys) * 100);
+
+	entity = malloc(sizeof(*entity));
+	entity -> keys_size = 0;
+	entity -> type = new_name;
+	entity -> keys = keys;
+	entity -> values = values;
+	return entity;
+}
+
+void pipejump_entity_set(pipejump_entity *entity, const char *key, const char *value)
+{
+	int keys_size;
+	char *new_key;
+	char *new_value;
+
+	new_key = malloc(sizeof(*key) * strlen(key));
+	strcpy(new_key, key);
+	if (value != NULL)
+	{
+		new_value = malloc(sizeof(*value) * strlen(value));
+		strcpy(new_value, value);
+	}
+
+	keys_size = entity -> keys_size;
+	(entity -> keys)[keys_size] = new_key;
+	(entity -> values)[keys_size] = new_value;
+	(entity -> keys_size)++;
+}
+
+void pipejump_entity_inspect(pipejump_entity *entity)
+{
+	int current_key;
+
+	current_key = 0;
+	printf("<%s>\n", entity -> type);
+	while (current_key < entity -> keys_size)
+	{
+		current_key++;
 	}
 }
 
-void *pipejump_request(pipejump_client *client, char *path, char *namespace, enum pipejump_entity_type type)
+void *pipejump_request(pipejump_client *client, char *path, enum pipejump_entity_type type)
 {
 	CURLcode response;
 	long response_code;
@@ -79,17 +140,14 @@ void *pipejump_request(pipejump_client *client, char *path, char *namespace, enu
 	curl_easy_getinfo(client -> curl_handle, CURLINFO_RESPONSE_CODE, &response_code);
 	pipejump_response_buffer[pipejump_response_buffer_pos] = '\0';
 	json_entity = json_loadb(pipejump_response_buffer, pipejump_response_buffer_pos, 0, NULL);
-	json_entity = json_object_get(json_entity, namespace);
 
 	switch(type) {
 		case PIPEJUMP_ENTITY:
-			get_single_object(json_entity);
-			break;
+			return get_single_object(json_entity);
 		case PIPEJUMP_COLLECTION:
-			break;
+			return NULL;
 		default:
-			break;
+			return NULL;
 	}
 
-	return json_entity;
 }

@@ -11,7 +11,10 @@ typedef struct pipejump_client
 
 typedef struct pipejump_entity
 {
-	void *dummy;
+	char *type;
+	char **keys;
+	char **values;
+	int keys_size;
 } pipejump_entity;
 
 enum pipejump_entity_type {
@@ -21,11 +24,15 @@ enum pipejump_entity_type {
 
 pipejump_client *pipejump_init(char *api_key);
 
+pipejump_entity *pipejump_entity_init(const char *);
+void pipejump_entity_set(pipejump_entity *, const char *, const char *);
+void pipejump_entity_inspect(pipejump_entity *entity);
+
 void pipejump_close(pipejump_client *);
 
 pipejump_entity *pipejump_get_account(pipejump_client *);
 
-void *pipejump_request(pipejump_client *, char *, char *, enum pipejump_entity_type);
+void *pipejump_request(pipejump_client *, char *, enum pipejump_entity_type);
 
 char pipejump_response_buffer[1024 * 8];
 int pipejump_response_buffer_pos;
