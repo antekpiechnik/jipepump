@@ -1,6 +1,4 @@
 #include <stdio.h>
-#include <jansson.h>
-#include <curl/curl.h>
 #include "pipejump.h"
 
 int main(int argc, char **argv)

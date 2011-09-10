@@ -1,5 +1,5 @@
 CFLAGS=-I/usr/local/include/ -I. -Wall -pedantic -O3
-LDFLAGS=-lcurl
+LDFLAGS=-lcurl -ljansson
 
 all: pipejump
 
