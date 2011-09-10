@@ -14,13 +14,18 @@ typedef struct pipejump_entity
 	void *dummy;
 } pipejump_entity;
 
+enum pipejump_entity_type {
+	PIPEJUMP_ENTITY,
+	PIPEJUMP_COLLECTION
+};
+
 pipejump_client *pipejump_init(char *api_key);
 
 void pipejump_close(pipejump_client *);
 
 pipejump_entity *pipejump_get_account(pipejump_client *);
 
-json_t *pipejump_request(pipejump_client *, char *);
+void *pipejump_request(pipejump_client *, char *, char *, enum pipejump_entity_type);
 
 char pipejump_response_buffer[1024 * 8];
 int pipejump_response_buffer_pos;

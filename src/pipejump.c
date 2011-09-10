@@ -47,13 +47,24 @@ void pipejump_close(pipejump_client *client)
 
 pipejump_entity *pipejump_get_account(pipejump_client *client)
 {
-	json_t *json_entity;
-
-	json_entity = pipejump_request(client, "account");
-	return NULL;
+	return pipejump_request(client, "account", "account", PIPEJUMP_ENTITY);
 }
 
-json_t *pipejump_request(pipejump_client *client, char *path)
+pipejump_entity get_single_object(json_t *json_entity) {
+	const char *key;
+	json_t *value;
+
+	void *iter = json_object_iter(json_entity);
+	while(iter)
+	{
+		key = json_object_iter_key(iter);
+		value = json_object_iter_value(iter);
+		fprintf(stdout, "%15s => %s\n", key, json_string_value(value));
+		iter = json_object_iter_next(json_entity, iter);
+	}
+}
+
+void *pipejump_request(pipejump_client *client, char *path, char *namespace, enum pipejump_entity_type type)
 {
 	CURLcode response;
 	long response_code;
@@ -68,5 +79,17 @@ json_t *pipejump_request(pipejump_client *client, char *path)
 	curl_easy_getinfo(client -> curl_handle, CURLINFO_RESPONSE_CODE, &response_code);
 	pipejump_response_buffer[pipejump_response_buffer_pos] = '\0';
 	json_entity = json_loadb(pipejump_response_buffer, pipejump_response_buffer_pos, 0, NULL);
+	json_entity = json_object_get(json_entity, namespace);
+
+	switch(type) {
+		case PIPEJUMP_ENTITY:
+			get_single_object(json_entity);
+			break;
+		case PIPEJUMP_COLLECTION:
+			break;
+		default:
+			break;
+	}
+
 	return json_entity;
 }
