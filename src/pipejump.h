@@ -9,30 +9,39 @@ typedef struct pipejump_client
 	CURL *curl_handle;
 } pipejump_client;
 
-typedef struct pipejump_entity
-{
-	char *type;
-	char **keys;
-	char **values;
-	int keys_size;
-} pipejump_entity;
+enum pipejump_value_type {
+	PIPEJUMP_INTEGER,
+	PIPEJUMP_STRING
+};
 
 enum pipejump_entity_type {
 	PIPEJUMP_ENTITY,
 	PIPEJUMP_COLLECTION
 };
 
+typedef struct pipejump_entity
+{
+	enum pipejump_entity_type *type;
+	char *name;
+	char **keys;
+	void **values;
+	enum pipejump_value_type *types;
+	int keys_size;
+} pipejump_entity;
+
 pipejump_client *pipejump_init(char *api_key);
 
-pipejump_entity *pipejump_entity_init(const char *);
-void pipejump_entity_set(pipejump_entity *, const char *, const char *);
+pipejump_entity *pipejump_entity_init();
+void pipejump_entity_set(pipejump_entity *, char *, void *, enum pipejump_value_type);
 void pipejump_entity_inspect(pipejump_entity *entity);
+void pipejump_entity_free(pipejump_entity *entity);
 
 void pipejump_close(pipejump_client *);
 
-pipejump_entity *pipejump_get_account(pipejump_client *);
+void pipejump_get_account(pipejump_client *, pipejump_entity *);
+void pipejump_get_deal(pipejump_client *, pipejump_entity *, long);
 
-void *pipejump_request(pipejump_client *, char *, enum pipejump_entity_type);
+void pipejump_request(pipejump_client *, void *, char *, enum pipejump_entity_type);
 
 char pipejump_response_buffer[1024 * 8];
 int pipejump_response_buffer_pos;
