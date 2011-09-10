@@ -42,6 +42,8 @@ pipejump_client *pipejump_init(char *api_key);
 
 pipejump_entity *pipejump_entity_init();
 void pipejump_entity_set(pipejump_entity *, char *, void *, enum pipejump_value_type);
+void *pipejump_entity_get(pipejump_entity *, char *);
+int pipejump_entity_save(pipejump_entity *);
 void pipejump_entity_inspect(pipejump_entity *entity);
 void pipejump_entity_free(pipejump_entity *entity);
 

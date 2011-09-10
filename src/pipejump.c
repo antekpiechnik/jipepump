@@ -153,6 +153,26 @@ void pipejump_entity_set(pipejump_entity *entity, char *key, void *value, enum p
 	(entity -> keys_size)++;
 }
 
+void *pipejump_entity_get(pipejump_entity *entity, char *key)
+{
+	int keys_size, i;
+
+	keys_size = entity -> keys_size;
+
+	i = 0;
+	while (i < keys_size && strcmp(key, (entity -> keys)[i]))
+	{
+		i++;
+	}
+	if (i >= keys_size) return NULL;
+	return (entity -> values)[i];
+}
+
+int pipejump_entity_save(pipejump_entity *entity)
+{
+	return 1;
+}
+
 void pipejump_entity_free(pipejump_entity *entity)
 {
 	free(entity -> keys);
@@ -169,7 +189,7 @@ void pipejump_entity_inspect(pipejump_entity *entity)
 	enum pipejump_value_type type;
 
 	current_key = 0;
-	printf("<%s", entity -> name);
+	printf("<%s:%ld", entity -> name, (unsigned long)pipejump_entity_get(entity, "id"));
 	while (current_key < entity -> keys_size)
 	{
 		printf(" ");
@@ -213,6 +233,10 @@ pipejump_collection *pipejump_collection_init()
 	collection -> size = 0;
 
 	return collection;
+}
+
+void pipejump_make_request(pipejump_client *client, char *path, void *data)
+{
 }
 
 void pipejump_request(pipejump_client *client, void *object, char *path, enum pipejump_entity_type type)
